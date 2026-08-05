@@ -2,7 +2,7 @@
 
 我的 Android 混合应用作品（简历项目）——一个基于腾讯 App 生成器 + Capacitor 构建的 H5 应用，Kotlin 原生壳包装 Web 前端。
 
-> 安装包在右侧 **Releases** 中下载。
+> 安装包在右侧 [Releases](https://github.com/l-umos/shiguang-yinji/releases) 中下载。
 
 ## 应用简介
 
@@ -26,7 +26,7 @@
 
 ## 安装方法
 
-1. 前往 [Releases](../../releases) 下载 `shiguang-yinji.apk`
+1. 前往 [Releases](https://github.com/l-umos/shiguang-yinji/releases) 下载 `shiguang-yinji.apk`
 2. 在手机设置中允许「安装未知来源应用」
 3. 打开 APK 安装，完成后即可使用
 
