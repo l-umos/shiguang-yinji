@@ -1,62 +1,66 @@
-# 时光印记 · 技术要点（TECH-NOTES）
+# 时光印记 · 技术要点（AI Memory 设计）
 
-给面试官 / 工程师看的拆包分析笔记，说明"这个 App 是怎么组成的、怎么调试、踩过哪些坑"。
+项目重点是 **AI 记忆管理**：让 AI 理解自然语言、沉淀为长期记忆，并像 Agent 一样真实地"动手"改数据。这份笔记按这个主线讲清楚设计与实现，供面试讲解。
 
-## 1. 应用概况
+## 1. 项目定位
 
-| 项目 | 值 |
-| --- | --- |
-| 形态 | 混合应用（Capacitor 原生壳 + WebView 加载 H5） |
-| 应用名 | 时光印记 |
-| 包名 | `yyb.ai.y178577885095228c7d41ba89399cd` |
-| 版本 | 1.0（versionCode 3） |
-| 系统要求 | minSdk 23（Android 6.0+）/ targetSdk 35 |
-| 关键权限 | 网络、录音、相册图片/视频读取 |
+面向个人生活记录场景的 AI 记忆管理应用。用户用自然语言记录日常，AI 抽取信息、结构化存储、支持回顾与总结。形态为 Capacitor 混合应用（Kotlin 壳 + H5），通过吐司APP 迭代 30 代完成。
 
-## 2. APK 结构（拆包看到什么）
+## 2. AI Memory 设计：实体抽象
 
-APK 本质是 ZIP 包，解压后：
+用户输入："昨天晚上八点和张三吃饭，聊了找工作的事情，心情很好"
 
+系统抽取为四类实体并持久化：
+
+| 实体 | 抽取内容 | 示例 |
+| --- | --- | --- |
+| 事件 Event | 时间、地点、内容 | 昨晚 20:00 · 吃饭 · 聊找工作 |
+| 人物 Person | 姓名、关系、出现次数 | 张三 |
+| 情绪 Emotion | 情绪类型、强度 | 高兴 |
+| 时间线 Timeline | 事件按时间排序 | 可回溯"上周发生了什么" |
+
+这样设计的好处：记忆不是一段话，而是**可检索、可关联、可总结**的结构化数据。人物档案（分组、生日、关联事件）就是建立在 Person ↔ Event 关联之上的。
+
+## 3. Agent 工具调用闭环
+
+AI 不只是输出文字，还通过工具调用执行真实操作：
+
+```text
+用户指令 → LLM 意图与参数识别 → 工具调用 → 执行写入 → 结果回传 → 生成回复
+createEvent / updateEvent / deleteEvent / createPerson / updatePerson ...
 ```
-assets/               # H5 前端 + Capacitor 配置（capacitor.config.json）
-  public/             #   Angular/Vite 构建产物：index.html、routes.json、JS bundle
-res/                  # 编译后资源（文件名被混淆，如 8c.png）
-AndroidManifest.xml   # 二进制格式清单（包名、权限、组件、图标资源 ID）
-resources.arsc        # 资源表（资源 ID -> 文件/值）
-classes*.dex          # 原生字节码
-META-INF/             # 依赖版本信息
-APK Signing Block     # v2/v3 签名（位于 ZIP 尾部的独立区块）
-```
 
-关键点：`res/` 文件名随机化，真实资源名要通过 `resources.arsc` 反向映射；`AndroidManifest.xml` 是二进制 XML（string pool + 元素/属性结构），需要专门解析。
+前端代码中可看到对应模块（`addEvent`、`birthday`、`分组`等均在 H5 bundle 中）。
 
-## 3. 签名机制与安装坑
+## 4. 可靠性机制（重点亮点）
 
-- 该 APK **只有 v2/v3 签名，没有 v1（JAR）签名**（META-INF 里没有 `.RSA/.SF/.MF`，但能检测到 `APK Sig Block 42` 魔数）。
-- 影响：部分安装器 / 旧设备 / 聊天工具转发场景会报「安装包有问题」。
-- 修复方向：
-  1. 用 `apksigner` 补签 v1 + v2（Android build-tools 自带）；
-  2. 或从 App Bundle（AAB）用 `bundletool` 生成 universal APK；
-  3. 或走应用宝官方渠道导出可安装包。
+**踩过的坑**：LLM 幻觉导致"AI 回复已保存，但数据库实际没有修改"——这是 Agent 落地最典型的可靠性问题。
 
-## 4. 拆包分析方法（这套笔记怎么来的）
+**解决方案（两层）**：
 
-1. `ZipFile` 解压 APK，得到完整文件树；
-2. 解析二进制 `AndroidManifest.xml`：读 string pool → 遍历 START_ELEMENT 节点 → 提取 `android:icon`（0x7F080000）、minSdk、targetSdk、权限、组件；
-3. 解析 `resources.arsc`：类型表（anim/drawable/id/mipmap…）→ key 池（资源名，如 `ic_launcher_foreground`）→ 条目值；
-4. 检测签名块魔数，判断 v2/v3 签名是否存在；
-5. 用正则扫描拆包内容，确认没有硬编码密钥。
+1. **写前数据校验**：工具调用参数先过 schema 校验（必填字段、类型、合法性，如时间格式、人物名非空），不合格直接拒绝并让 AI 重新提问；
+2. **写后结果验证**：写入后回读/确认执行结果，只有确认成功才向用户回复"已保存"；失败则明确报错、提示重试。
 
-## 5. 想自己改这个 App，从哪下手
+这套"先说清楚要干什么 → 校验 → 执行 → 验证 → 再回复"的流程，把 Agent 从"会聊天"变成"可靠干活"。
 
-- **改界面 / 功能（推荐）**：改 `assets/public/` 下的 H5 代码（路由在 `routes.json`，入口 `index.html`，逻辑在 JS bundle），重新打包 + 重签名。
-- **看原生逻辑**：用 [jadx](https://github.com/skylot/jadx) 打开 `classes.dex`，看 `MainActivity` / `MainApplication`。
-- **看资源映射**：`resources.arsc` + `res/` 对应关系，可用 `aapt2 dump resources` 查看。
-- **注意**：任何修改后都必须重新签名才能安装，否则会被拒绝。
+## 5. 多模态输入
 
-## 6. 面试可以讲的技术点
+- 文本：直接自然语言记录
+- 图片：相册/拍照，配合 PictureSelector
+- 语音：录音后走腾讯 `audio_to_text`（`https://yybdsaccess.qq.com/app_builder/audio_to_text`）转文字，再进入同一套记忆抽取流程
 
-- 混合应用原理：原生壳 ↔ WebView ↔ 原生桥（Capacitor native-bridge.js）
-- APK 逆向流程：zip → 二进制 XML → 资源表 → dex
-- 签名方案演进：v1 / v2 / v3 的差异与兼容性
-- 安全意识：拆包代码不含密钥（已扫描确认）；生产环境凭据必须放服务端，客户端只做展示
+多模态统一汇入 AI Memory 抽取管线，是个人知识管理场景的探索方向。
+
+## 6. 工程实现（APK 侧）
+
+- 混合应用：Capacitor 壳 + WebView，前端为 Angular/Vite 产物（`assets/public`）
+- APK 结构：`AndroidManifest.xml`（二进制 XML）、`resources.arsc`、`classes.dex`
+- 签名：仅 v2/v3（无 v1），部分设备/转发场景会报"安装包有问题"；修复需 `apksigner` 补 v1+v2 或 bundletool 出 universal APK
+- 安全意识：拆包内容已扫描，无硬编码密钥；生产凭据应放服务端
+
+## 7. 面试可讲点
+
+- AI Memory 实体建模：为什么记忆要结构化，而不是存对话记录
+- Agent 工具调用闭环与可靠性：校验 + 结果验证解决 LLM 幻觉
+- 产品迭代能力：30 代低代码迭代打磨需求与交互
+- 多模态：语音转文字 → 统一记忆管线的工程路径
