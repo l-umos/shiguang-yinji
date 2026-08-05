@@ -1,0 +1,19 @@
+{
+  "appId": "yyb.ai.y178577885095228c7d41ba89399cd",
+  "appName": "时光印记",
+  "webDir": "dist-apk",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "Default",
+      "backgroundColor": "#00000000"
+    }
+  },
+  "server": {
+    "hostname": "app-web.tencentapps.net",
+    "androidScheme": "https"
+  }
+}

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-START -->
+    <script src="https://aegis.cdn-go.cn/aegis-sdk-v2/2.6.13/aegis.min.js"></script>
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-END -->
+
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-START -->
+    <script>
+      if (typeof window.Aegis === 'function') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const isMonkeyTest = Boolean(urlParams.get('__e2e_gremlin'));
+        const aegisID = isMonkeyTest ? 'SDK-01c2b22c37939f162a15' : 'SDK-42a0ae29a90bc4f6a218';
+        const tusiAppID = '178577885095228c7d41ba89399cd';
+        const tusiAppVersion = '30';
+        const tusiMode = isMonkeyTest ? 'monkey-test' : 'apk';
+        const tusiAppEnv = 'formal'.toLowerCase();
+        const aegisEnv = ['formal', '%vite_app_env%', ''].includes(tusiAppEnv) ? 'production' : tusiAppEnv;
+
+        window.aegisV2 = new Aegis({
+          id: aegisID,
+          hostUrl: {
+            url: 'https://galileotelemetry.tencent.com/collect',
+          },
+          env: aegisEnv,
+          plugin: {
+            spa: true,
+            assetSpeed: true,
+            session: true,
+            api: {
+              apiDetail: true,
+              reportAbort: true,
+            },
+          },
+          extField: {
+            tusi_app_id: tusiAppID,
+            tusi_app_version: tusiAppVersion,
+            tusi_mode: tusiMode,
+          }
+        });
+      }
+    </script>
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-END -->
+
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-START -->
+    <script src="https://cdn.yyb.gtimg.com/app-generator-h5-runtime-lib/latest/app-generator-h5-runtime-lib.iife.js"></script>
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-END -->
+    
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-START -->
+    <script>
+      if (
+        window.AppGeneratorH5RuntimeLib
+        && typeof window.AppGeneratorH5RuntimeLib.init === 'function'
+      ) {
+        window.AppGeneratorH5RuntimeLib.init();
+      }
+    </script>
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-END -->
+
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-START -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.yyb.gtimg.com/app-generator-h5-runtime-lib/latest/app-generator-h5-runtime-lib.css" />
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-END -->
+
+    
+  </head>
+  <body>
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-START -->
+    <div id="app"></div>
+    <!-- AI-DO-NOT-MODIFY-THIS-CODE-END -->
+    <script crossorigin id="vite-legacy-polyfill" src="/assets/polyfills-legacy-C1yjTrdL.js"></script>
+    <script crossorigin id="vite-legacy-entry" data-src="/assets/index-legacy-C1sFj11D.js">System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))</script>
+  </body>
+</html>

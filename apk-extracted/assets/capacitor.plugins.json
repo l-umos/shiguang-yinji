@@ -1,0 +1,10 @@
+[
+	{
+		"pkg": "@tencent/capacitor-media-picker",
+		"classpath": "com.mycompany.plugins.mediapicker.CapacitorMediaPickerPlugin"
+	},
+	{
+		"pkg": "@tencent/capacitor-savefile",
+		"classpath": "com.yyb.capacitor.savefile.YybSaveFilePlugin"
+	}
+]
